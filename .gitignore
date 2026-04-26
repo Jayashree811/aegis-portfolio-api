@@ -3,7 +3,10 @@ target/
 *.jar
 *.war
 *.ear
+# Files
+*.zip
 *.log
+*.tmp
 
 # Maven
 .mvn/
