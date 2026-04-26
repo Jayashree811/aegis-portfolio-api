@@ -1,0 +1,32 @@
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# Maven
+.mvn/
+apache-maven-*/
+maven.zip
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+.nb-gradle/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Java/JDK
+jdk-*/
+jdk.zip
+
+# Environment
+.env
+.env.local

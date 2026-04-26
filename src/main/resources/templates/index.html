@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Portfolio Management</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b1120;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.15), transparent 25%);
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .input-dark {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .input-dark:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Micro-animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+    </style>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="p-6 md:p-12">
+    <div class="max-w-6xl mx-auto space-y-8 animate-fade">
+        
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10">
+            <div>
+                <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
+                    Aegis Portfolio
+                </h1>
+                <p class="text-slate-400 mt-2">Institutional-Grade Asset Management</p>
+            </div>
+            
+            <div id="initSection" class="mt-4 md:mt-0 glass-panel flex gap-4 items-center">
+                <input type="number" id="initCash" placeholder="Initial Cash ($)" class="input-dark px-4 py-2 rounded-lg w-40" value="100000">
+                <button onclick="createPortfolio()" class="btn-primary px-6 py-2 rounded-lg font-medium">Initialize Portfolio</button>
+            </div>
+
+            <div id="activePortfolioBadge" class="hidden mt-4 md:mt-0 glass-panel border-emerald-500/30 flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                <span class="text-sm font-medium text-emerald-100">Live Session Active</span>
+            </div>
+        </header>
+
+        <!-- Notification Banner -->
+        <div id="toast" class="hidden px-4 py-3 rounded-lg text-sm font-medium mb-4 transition-all"></div>
+
+        <div id="dashboardSection" class="hidden opacity-0 transition-opacity duration-500 ease-in space-y-8">
+            
+            <!-- Top Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-panel">
+                    <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Available Liquid Cash</h2>
+                    <div class="mt-2 text-4xl font-bold text-white flex items-baseline">
+                        <span class="text-2xl mr-1 text-slate-500">$</span>
+                        <span id="cashBalanceDisplay">0.00</span>
+                    </div>
+                </div>
+                <div class="glass-panel">
+                    <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Client Identity</h2>
+                    <div class="mt-2 text-2xl font-semibold text-white" id="clientNameDisplay">--</div>
+                    <div class="text-sm text-slate-400 mt-1">Risk Profile: <span id="riskDisplay" class="text-blue-300">--</span></div>
+                </div>
+            </div>
+
+            <!-- Main Control Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Left Column: Forms -->
+                <div class="space-y-6">
+                    <!-- Trade Execute -->
+                    <div class="glass-panel">
+                        <h3 class="text-lg font-semibold text-white mb-4">Execute Trade</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Asset Symbol</label>
+                                <input type="text" id="tradeSymbol" placeholder="e.g. AAPL" class="input-dark w-full px-3 py-2 rounded uppercase">
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="flex-1">
+                                    <label class="block text-xs font-medium text-slate-400 mb-1">Quantity</label>
+                                    <input type="number" id="tradeQty" placeholder="0.0" class="input-dark w-full px-3 py-2 rounded" step="0.1">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-xs font-medium text-slate-400 mb-1">Price / Share</label>
+                                    <input type="number" id="tradePrice" placeholder="$" class="input-dark w-full px-3 py-2 rounded" step="0.01">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <button onclick="executeTrade('buy')" class="bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 py-2 rounded-lg font-medium transition-colors">BUY</button>
+                                <button onclick="executeTrade('sell')" class="bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 py-2 rounded-lg font-medium transition-colors">SELL</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dividend Execution -->
+                    <div class="glass-panel">
+                        <h3 class="text-lg font-semibold text-white mb-4">Record Dividend</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Asset Symbol</label>
+                                <input type="text" id="divSymbol" placeholder="e.g. AAPL" class="input-dark w-full px-3 py-2 rounded uppercase">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Amount Per Share</label>
+                                <input type="number" id="divAmount" placeholder="$" class="input-dark w-full px-3 py-2 rounded" step="0.01">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Record Date</label>
+                                <input type="date" id="divDate" class="input-dark w-full px-3 py-2 rounded">
+                            </div>
+                            <button onclick="recordDividend()" class="w-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 py-2 rounded-lg font-medium transition-colors mt-2">Apply Payout</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Data Tables -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Holdings Table -->
+                    <div class="glass-panel min-h-[300px]">
+                        <h3 class="text-lg font-semibold text-white mb-4">Current Holdings</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-300">
+                                <thead class="text-xs text-slate-400 uppercase bg-slate-800/50">
+                                    <tr>
+                                        <th class="px-4 py-3 rounded-tl-lg">Symbol</th>
+                                        <th class="px-4 py-3">Quantity</th>
+                                        <th class="px-4 py-3 text-right">Avg Cost</th>
+                                        <th class="px-4 py-3 text-right rounded-tr-lg">Total Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-700/50" id="holdingsTableBody">
+                                    <!-- Populated via JS -->
+                                    <tr><td colspan="4" class="px-4 py-6 text-center text-slate-500 italic">No assets currently held.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Dividend Summary -->
+                    <div class="glass-panel">
+                        <h3 class="text-lg font-semibold text-white mb-4">Dividend YTD Summary</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" id="dividendGrid">
+                            <!-- Populated via JS -->
+                            <div class="col-span-full text-center text-sm text-slate-500 italic py-4">No dividends recorded.</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        const API_BASE = '/v1/portfolios';
+        let currentPortfolioId = null;
+
+        // Set default date to today
+        document.getElementById('divDate').valueAsDate = new Date();
+
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `px-4 py-3 rounded-lg text-sm font-medium mb-4 block animate-fade ${
+                type === 'success' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
+            }`;
+            setTimeout(() => t.classList.add('hidden'), 4000);
+        }
+
+        async function createPortfolio() {
+            const cash = document.getElementById('initCash').value;
+            try {
+                const res = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        clientName: "Alpha Capital Trust",
+                        riskProfile: "Aggressive",
+                        cashBalance: cash || 0
+                    })
+                });
+                
+                if(!res.ok) throw new Error("Failed to initialize portfolio.");
+                
+                const data = await res.json();
+                currentPortfolioId = data.id;
+                
+                // UI Switch
+                document.getElementById('initSection').classList.add('hidden');
+                document.getElementById('activePortfolioBadge').classList.remove('hidden');
+                document.getElementById('activePortfolioBadge').classList.add('flex');
+                
+                const dash = document.getElementById('dashboardSection');
+                dash.classList.remove('hidden');
+                setTimeout(() => dash.classList.remove('opacity-0'), 50); // fade in
+
+                showToast("Live Trading Session Initiated successfully.");
+                await refreshAll();
+
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function refreshAll() {
+            if(!currentPortfolioId) return;
+            await Promise.all([
+                fetchPortfolioDetails(),
+                fetchHoldings(),
+                fetchDividends()
+            ]);
+        }
+
+        function formatMoney(amount) {
+            return parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        async function fetchPortfolioDetails() {
+            const res = await fetch(`${API_BASE}/${currentPortfolioId}`);
+            if(res.ok) {
+                const p = await res.json();
+                document.getElementById('cashBalanceDisplay').textContent = formatMoney(p.cashBalance);
+                document.getElementById('clientNameDisplay').textContent = p.clientName;
+                document.getElementById('riskDisplay').textContent = p.riskProfile;
+            }
+        }
+
+        async function fetchHoldings() {
+            const res = await fetch(`${API_BASE}/${currentPortfolioId}/holdings`);
+            if(res.ok) {
+                const holdings = await res.json();
+                const tbody = document.getElementById('holdingsTableBody');
+                tbody.innerHTML = '';
+                
+                if(holdings.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-slate-500 italic">No assets currently held.</td></tr>`;
+                    return;
+                }
+
+                holdings.forEach(h => {
+                    const row = document.createElement('tr');
+                    const totalVal = formatMoney(parseFloat(h.quantity) * parseFloat(h.averageCost)); /* Display theoretical cost value */
+                    row.className = 'hover:bg-slate-800/30 transition-colors';
+                    row.innerHTML = `
+                        <td class="px-4 py-3 font-medium text-white">${h.symbol.toUpperCase()}</td>
+                        <td class="px-4 py-3">${parseFloat(h.quantity).toFixed(4)}</td>
+                        <td class="px-4 py-3 text-right text-slate-400">$${formatMoney(h.averageCost)}</td>
+                        <td class="px-4 py-3 text-right text-emerald-400 font-medium">$${totalVal}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        async function fetchDividends() {
+            const res = await fetch(`${API_BASE}/${currentPortfolioId}/dividends`);
+            if(res.ok) {
+                const divs = await res.json();
+                const grid = document.getElementById('dividendGrid');
+                grid.innerHTML = '';
+
+                if(divs.length === 0) {
+                    grid.innerHTML = `<div class="col-span-full text-center text-sm text-slate-500 italic py-4">No dividends recorded.</div>`;
+                    return;
+                }
+
+                divs.forEach(d => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-800/40 p-4 rounded-lg border border-slate-700/50';
+                    card.innerHTML = `
+                        <div class="text-xs text-slate-400 mb-1 leading-tight">${d.symbol} Yield</div>
+                        <div class="text-xl font-bold text-emerald-400">+$${formatMoney(d.totalDividend)}</div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+        }
+
+        async function executeTrade(type) {
+            const symbol = document.getElementById('tradeSymbol').value.toUpperCase();
+            const qty = document.getElementById('tradeQty').value;
+            const price = document.getElementById('tradePrice').value;
+
+            if(!symbol || !qty || !price) {
+                showToast("Please fill all trade fields.", "error");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/${currentPortfolioId}/transactions/${type}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol, quantity: qty, price })
+                });
+
+                if(!res.ok) {
+                    const errPayload = await res.json();
+                    throw new Error(errPayload.message || "Failed to execute trade");
+                }
+
+                showToast(`Successfully executed ${type.toUpperCase()} for ${symbol}`);
+                document.getElementById('tradeSymbol').value = '';
+                document.getElementById('tradeQty').value = '';
+                document.getElementById('tradePrice').value = '';
+                await refreshAll();
+
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function recordDividend() {
+            const symbol = document.getElementById('divSymbol').value.toUpperCase();
+            const perShare = document.getElementById('divAmount').value;
+            const rDate = document.getElementById('divDate').value;
+
+            if(!symbol || !perShare || !rDate) {
+                showToast("Please fill all dividend fields.", "error");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/${currentPortfolioId}/dividends`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol, perShareAmount: perShare, recordDate: rDate })
+                });
+
+                if(!res.ok) {
+                    const errPayload = await res.json();
+                    throw new Error(errPayload.message || "Failed to parse dividend payout");
+                }
+
+                showToast(`Dividend applied for ${symbol} successfully! Cash balance updated.`);
+                document.getElementById('divSymbol').value = '';
+                document.getElementById('divAmount').value = '';
+                await refreshAll();
+
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
